@@ -1,11 +1,10 @@
-/* eslint-disable no-restricted-syntax */
 const DEFAULT_OPTIONS = {
   delimiter: ',',
   eol: '\n',
 };
 
 
-class Yajscsv {
+class JStoCSV {
 
   constructor(fields, options) {
     this.fields = fields;
@@ -25,6 +24,20 @@ class Yajscsv {
     return lines;
   }
 
+  convert(data, reducerInfo = this._stringReducer()) {
+    let acc = reducerInfo.acc;
+    let fn = reducerInfo.fn;
+
+    if (!this.options.noHeaderLine)
+      acc = fn(acc, this._headerLine());
+    data.forEach((datum) => {
+      acc = fn(acc, this._dataLine(datum));
+    });
+
+    return acc;
+  }
+
+
   _autoFields(data) {
     return Object.keys(data).map(function(key) {
       return { path: key };
@@ -39,7 +52,7 @@ class Yajscsv {
   _dataLine(datum) {
     let columns = this.fields.map((field) => {
        let path = field.path;
-       let val = path ? Yajscsv.followPath(datum, ...path.split('.')) : datum;  // todo recur...
+       let val = path ? JStoCSV.followPath(datum, ...path.split('.')) : datum;  // todo recur...
        if (field.fn)
          val = field.fn(val);
        return this._quoteValue(val);
@@ -62,9 +75,29 @@ class Yajscsv {
     return path.reduce(
       function(prev, cur) {
         return prev ? prev[cur] : null;
-        }, datum);
+      }, datum);
+  }
+
+  _stringReducer(eol = this.options.eol) {
+    return {
+      acc: "",
+      fn(acc, line) {
+        acc += (line + eol);
+        return acc;
+      }
+    }
+  }
+
+  streamReducer(writeStream, eol = this.options.eol) {
+    return {
+      acc: writeStream,
+      fn(acc, line) {
+        acc.write(line + eol);
+        return acc;
+      }
+    }
   }
 }
 
 
-module.exports = Yajscsv;
+module.exports = JStoCSV;

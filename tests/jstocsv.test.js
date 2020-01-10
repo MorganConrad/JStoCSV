@@ -1,6 +1,9 @@
 const test = require('tape');
-const Yajscsv = require('../yajscsv.js');
-const data = require('./data.js');
+const fs = require('fs');
+const JStoCSV = require('../jstocsv.js');
+const testObject = require('./testData/testObject.js');
+const testCSV = require('./testData/testCSV.js');
+const CountingStream = require('./countingStream');
 const spectrum = require('csv-spectrum');
 
 const rawFields = [
@@ -26,29 +29,34 @@ const nestedFields = [
 ];
 
 
-test('export rawFields', function(t) {
-  let yajscsv = new Yajscsv(rawFields);
-  let actualCSV = yajscsv.generateString(data.testObject);
-  t.equals(actualCSV, data.testCSV.rawFields);
+test('mytests', function(t) {
+  let jstocsv = new JStoCSV(rawFields);
+  let actualCSV = jstocsv.generateString(testObject) + "\n";
+  t.equals(actualCSV, testCSV.rawFields, "rawFields");
 
+  jstocsv = new JStoCSV(labelledFields);
+  actualCSV = jstocsv.generateString(testObject) + "\n";
+  t.equals(actualCSV, testCSV.labelledFields, "labelledFields");
+
+  jstocsv = new JStoCSV(nestedFields);
+  actualCSV = jstocsv.generateString(testObject) + "\n";
+  t.equals(actualCSV, testCSV.nestedFields, "nestedFields");
+
+  actualCSV = jstocsv.convert(testObject);
+  t.equals(actualCSV, testCSV.nestedFields, "convert.nestedFields");
+  t.end();
+});
+
+test('writeStream', function(t) {
+  let cs = new CountingStream();
+  let jstocsv = new JStoCSV(rawFields);
+  let reducerInfo = jstocsv.streamReducer(cs);
+  jstocsv.convert(testObject, reducerInfo);
+  cs.end(() => {
+    t.equals(cs.bytesWritten, 197);
+    t.equals(cs.lines, 4);
     t.end();
-});
-
-
-test('export labelledFields', function(t) {
-  let yajscsv = new Yajscsv(labelledFields);
-  let actualCSV = yajscsv.generateString(data.testObject);
-  t.equals(actualCSV, data.testCSV.labelledFields);
-
-  t.end();
-});
-
-test('export nestedFields', function(t) {
-  let yajscsv = new Yajscsv(nestedFields);
-  let actualCSV = yajscsv.generateString(data.testObject);
-  t.equals(actualCSV, data.testCSV.nestedFields);
-
-  t.end();
+  });
 });
 
 
@@ -76,14 +84,13 @@ function addSpectrumEOF(testName) {
 test('spectrum', function(t) {
   spectrum(function(err, sdata) {
     for (let testData of sdata) {
-      console.log('testing ' + testData.name);
-      let yajscsv = new Yajscsv(null, SPECTRUM_OPTS[testData.name]);
+      let jstocsv = new JStoCSV(null, SPECTRUM_OPTS[testData.name]);
       let inJSON = JSON.parse(testData.json);
-      let actualCSV = yajscsv.generateString(inJSON)+addSpectrumEOF(testData.name);
+      let actualCSV = jstocsv.generateString(inJSON)+addSpectrumEOF(testData.name);
       let expected = testData.csv.toString().replace(/\r?\n|\r/g, '\n');
       if (testData.name === 'newlines_crlf')
         actualCSV = actualCSV.replace(/\r\n/, '\n');
-      t.equals(actualCSV, expected);
+      t.equals(actualCSV, expected, testData.name);
     }
 
     t.end();

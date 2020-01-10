@@ -1,4 +1,0 @@
-STRING,number,NESTED,NULLS,WITH QUOTES
-String1,1,n1,,"This ""has ""quotes "
-String2,2,n2,,"This ""has ""quotes "
-String3,31,n3,,"This ""has ""quotes "
