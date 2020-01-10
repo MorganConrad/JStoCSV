@@ -7,12 +7,17 @@ const DEFAULT_OPTIONS = {
 class JStoCSV {
 
   constructor(fields, options) {
+    if (fields && !fields[0].path) // passed an array of strings
+      fields = fields.map((path) => { return { path } });
     this.fields = fields;
     this.options = Object.assign({}, DEFAULT_OPTIONS, options);
   }
 
-  generateString(data) {
-    return this.generateLines(data).join(this.options.eol);
+  generateString(data, appendEOL) {
+    let s = this.generateLines(data).join(this.options.eol);
+    if (appendEOL)
+      s += this.options.eol;
+    return s;
   }
 
   generateLines(data) {
@@ -24,17 +29,20 @@ class JStoCSV {
     return lines;
   }
 
-  convert(data, reducerInfo = this._stringReducer()) {
-    let acc = reducerInfo.acc;
-    let fn = reducerInfo.fn;
+
+  reduce(data, reducer, acc) {
 
     if (!this.options.noHeaderLine)
-      acc = fn(acc, this._headerLine());
+      acc = reducer(acc, this._headerLine());
     data.forEach((datum) => {
-      acc = fn(acc, this._dataLine(datum));
+      acc = reducer(acc, this._dataLine(datum));
     });
 
     return acc;
+  }
+
+  stream(data, writeStream) {
+    return this.reduce(data, this._streamReducer(), writeStream);
   }
 
 
@@ -64,7 +72,7 @@ class JStoCSV {
   _quoteValue(val) {
     let str = (val == null) ? '' : String(val);
 
-    let mustBeQuoted = this.options.forceAllQuoted ||
+    let mustBeQuoted = this.options.quoteAll ||
                          (this.options.quoteEmpties && !str.length) ||
                          str.includes('"') || str.includes(this.options.delimiter) || str.includes(this.options.eol);
 
@@ -79,22 +87,16 @@ class JStoCSV {
   }
 
   _stringReducer(eol = this.options.eol) {
-    return {
-      acc: "",
-      fn(acc, line) {
-        acc += (line + eol);
-        return acc;
-      }
+    return function(acc, line) {
+      acc += (line + eol);
+      return acc;
     }
   }
 
-  streamReducer(writeStream, eol = this.options.eol) {
-    return {
-      acc: writeStream,
-      fn(acc, line) {
-        acc.write(line + eol);
-        return acc;
-      }
+  _streamReducer(eol = this.options.eol) {
+    return function(acc, line) {
+      acc.write(line + eol);
+      return acc;
     }
   }
 }

@@ -6,12 +6,7 @@ const testCSV = require('./testData/testCSV.js');
 const CountingStream = require('./countingStream');
 const spectrum = require('csv-spectrum');
 
-const rawFields = [
-  { path: "string" },
-  { path: "number" },
-  { path: "with comma" },
-  { path: "with quotes" },
-];
+const rawFields = ["string","number","with comma","with quotes"];
 
 const labelledFields = [
   { path: "string", label: "STRING" },
@@ -42,16 +37,16 @@ test('mytests', function(t) {
   actualCSV = jstocsv.generateString(testObject) + "\n";
   t.equals(actualCSV, testCSV.nestedFields, "nestedFields");
 
-  actualCSV = jstocsv.convert(testObject);
-  t.equals(actualCSV, testCSV.nestedFields, "convert.nestedFields");
+  actualCSV = jstocsv.reduce(testObject, jstocsv._stringReducer(), "");
+  t.equals(actualCSV, testCSV.nestedFields, "reduce.nestedFields");
   t.end();
 });
 
 test('writeStream', function(t) {
   let cs = new CountingStream();
   let jstocsv = new JStoCSV(rawFields);
-  let reducerInfo = jstocsv.streamReducer(cs);
-  jstocsv.convert(testObject, reducerInfo);
+ // let reducerInfo = jstocsv.streamReducer(cs);
+  jstocsv.stream(testObject, cs);
   cs.end(() => {
     t.equals(cs.bytesWritten, 197);
     t.equals(cs.lines, 4);
