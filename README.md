@@ -50,4 +50,4 @@ For convenience, you can use (see tests)
  - _stringReducer();
  - _streamReducer()
 
-### Notes, Todos, and Caveats
+### Notes, Todos, and  Caveats
