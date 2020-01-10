@@ -48,6 +48,6 @@ For the ultimate in control
 
 For convenience, you can use (see tests)
  - _stringReducer();
- - _streamReducer(writeStream)
+ - _streamReducer()
 
 ### Notes, Todos, and Caveats
