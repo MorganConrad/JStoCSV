@@ -6,7 +6,8 @@ const testObject = [
     "with quotes": "This \"has \"quotes ",
     "nested" : {
       "value": "n1"
-    }
+    },
+    arrayData: [100, 101, 102]
   },
   {
     "string": "String2",
@@ -15,7 +16,8 @@ const testObject = [
     "with quotes": "This \"has \"quotes ",
     "nested" : {
       "value": "n2"
-    }
+    },
+    arrayData: [200, 201, 202]
   },
   {
     "string": "String3",
@@ -24,7 +26,8 @@ const testObject = [
     "with quotes": "This \"has \"quotes ",
     "nested" : {
       "value": "n3"
-    }
+    },
+    arrayData: [300, 301, 302]
   }
 ];
 

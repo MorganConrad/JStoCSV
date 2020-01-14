@@ -3,12 +3,18 @@ const DEFAULT_OPTIONS = {
   eol: '\n',
 };
 
-
 class JStoCSV {
 
   constructor(fields, options) {
-    if (fields && !fields[0].path) // passed an array of strings
-      fields = fields.map((path) => { return { path } });
+    if (fields) {
+      if (typeof fields[0] === 'string') // passed an array of strings
+        fields = fields.map((path) => { return { path } });
+
+      // Presplit the paths
+      fields.forEach((f) => {
+          f.splitpath = f.path.split('.');
+      });
+    }
     this.fields = fields;
     this.options = Object.assign({}, DEFAULT_OPTIONS, options);
   }
@@ -23,7 +29,7 @@ class JStoCSV {
   generateLines(data) {
     if (!this.fields)
       this.fields = this._autoFields(data[0]);
-    const lines = data.map((datum) => this._dataLine(datum));
+    const lines = data.map((datum, index, array) => this._dataLine(datum, index, array));
     if (!this.options.noHeaderLine)
       lines.unshift(this._headerLine());
     return lines;
@@ -31,11 +37,10 @@ class JStoCSV {
 
 
   reduce(data, reducer, acc) {
-
     if (!this.options.noHeaderLine)
       acc = reducer(acc, this._headerLine());
-    data.forEach((datum) => {
-      acc = reducer(acc, this._dataLine(datum));
+    data.forEach((datum, index, array) => {
+      acc = reducer(acc, this._dataLine(datum, index, array));
     });
 
     return acc;
@@ -48,26 +53,30 @@ class JStoCSV {
 
   _autoFields(data) {
     return Object.keys(data).map(function(key) {
-      return { path: key };
+      return {
+        path: key,
+        splitpath: key.split('.') };
     } );
   }
+
 
   _headerLine() {
     let fieldLabels = this.fields.map((field) => this._quoteValue(field.label || field.path));
     return fieldLabels.join(this.options.delimiter);
   }
 
-  _dataLine(datum) {
+
+  _dataLine(datum, index, array) {
     let columns = this.fields.map((field) => {
-       let path = field.path;
-       let val = path ? JStoCSV.followPath(datum, ...path.split('.')) : datum;  // todo recur...
+       let val = JStoCSV.followPath(datum, ...field.splitpath);
        if (field.fn)
-         val = field.fn(val);
+         val = field.fn(val, datum, index, array);
        return this._quoteValue(val);
     });
 
     return columns.join(this.options.delimiter);
   }
+
 
   _quoteValue(val) {
     let str = (val == null) ? '' : String(val);
@@ -79,6 +88,7 @@ class JStoCSV {
     return (mustBeQuoted) ? '"' + str.replace(/\"/g, '""') + '"' : str;
   }
 
+
   static followPath(datum, ...path) {
     return path.reduce(
       function(prev, cur) {
@@ -86,12 +96,14 @@ class JStoCSV {
       }, datum);
   }
 
+
   _stringReducer(eol = this.options.eol) {
     return function(acc, line) {
       acc += (line + eol);
       return acc;
     }
   }
+
 
   _streamReducer(eol = this.options.eol) {
     return function(acc, line) {

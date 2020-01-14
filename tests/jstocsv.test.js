@@ -21,6 +21,7 @@ const nestedFields = [
   { path: "nested.value", label: "NESTED" },
   { path: "nested.x.y", label: "NULLS" },
   { path: "with quotes", label: "WITH QUOTES" },
+  { path: "arrayData.1", label: " ARRAY[1]" }
 ];
 
 
@@ -29,8 +30,9 @@ test('mytests', function(t) {
   let actualCSV = jstocsv.generateString(testObject) + "\n";
   t.equals(actualCSV, testCSV.rawFields, "rawFields");
 
+  labelledFields.length = 4;
   jstocsv = new JStoCSV(labelledFields);
-  actualCSV = jstocsv.generateString(testObject) + "\n";
+  actualCSV = jstocsv.generateString(testObject, true);
   t.equals(actualCSV, testCSV.labelledFields, "labelledFields");
 
   jstocsv = new JStoCSV(nestedFields);
@@ -52,6 +54,20 @@ test('writeStream', function(t) {
     t.equals(cs.lines, 4);
     t.end();
   });
+});
+
+
+test("userfn", function(t) {
+  labelledFields.push( {
+    path: "number", label: "difference",
+    fn: function(val, datum, index, array) {
+       return index? val-array[index-1].number : val;
+    }
+  });
+  let jstocsv = new JStoCSV(labelledFields);
+  let actualCSV = jstocsv.generateString(testObject) + "\n";
+  t.equals(actualCSV, testCSV.userFn, "userFn");
+  t.end()
 });
 
 
