@@ -41,7 +41,6 @@ John,Doe, 06 March 2003
 ### JStoCSV(fields, options)   constructor
  - fields is usually an array of {}
    - path: usually a string, route to get the data, e.g. "name" or "name.first"
-    - to retrieve data from arrays, pass an array, _e.g._ ["myArray", 3]
    - label: label for header line (defaults to path)
    - fn: user function to apply afterwards (usually null, see Notes at end)
 
