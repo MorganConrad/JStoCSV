@@ -28,7 +28,7 @@ data = [
 
 const jstocsv = new JStoCSV(labelledFields);
 jstocsv.stream(data, someWriteableStream); // or
-jstocsv.generateString(data);
+let result = jstocsv.generateString(data);
 
 Output / Result
 First Name,Last Name,Date of Birth
@@ -40,17 +40,18 @@ John,Doe, 06 March 2003
 
 ### JStoCSV(fields, options)   constructor
  - fields is usually an array of {}
-   - path: usually a string, route to get the data, e.g. "name" or "name.first"
+   - path: a string, route to get the data, e.g. "name" or "name.first"
    - label: label for header line (defaults to path)
-   - fn: user function to apply afterwards (usually null, see Notes at end)
+   - fn: optional user function to apply afterwards (usually null, see Notes at end)
 
  - fields may be an array of strings
    - if so, they are used for the path (and the header label)
+   - fn option is unavailable
 
-If fields is not provided, JStoCSV will use all keys from the first data value.
+_If fields is not provided, JStoCSV will use all keys from the first data value._
 
  - options
-   - delimiter     you can use '\t' etc.  defaults to ','
+   - delimiter     defaults to ',', you can use '\t' etc.
    - eol           defaults to '\n'
    - quoteEmpties  put quotes around all empty fields
    - quoteAll      put quotes around all fields
@@ -89,7 +90,7 @@ This module is short because it just does the basics for output.  If you need to
 
 `fn(value, datum, index, array)`
  - **value** is the value within datum (as determined by path)
- - **datum** is the object in the data array
+ - **datum** is the entire object in the data array
  - **index** is the 0-based index of the object within the data array
  - **array** is the full data array
 

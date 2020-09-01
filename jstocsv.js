@@ -6,7 +6,7 @@ const DEFAULT_OPTIONS = {
 class JStoCSV {
 
   constructor(fields, options) {
-    if (fields) {
+    if (fields && fields.length) {
       if (typeof fields[0] === 'string') // passed an array of strings
         fields = fields.map((path) => { return { path } });
 
@@ -37,6 +37,8 @@ class JStoCSV {
 
 
   reduce(data, reducer, acc) {
+    if (!this.fields)
+      this.fields = this._autoFields(data[0]);
     if (!this.options.noHeaderLine)
       acc = reducer(acc, this._headerLine());
     data.forEach((datum, index, array) => {
