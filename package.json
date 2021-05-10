@@ -20,7 +20,7 @@
     "coveralls": "^3.1.0",
     "csv-spectrum": "^1.0.0",
     "nyc": "^15.1.0",
-    "tape": "^4.13.3"
+    "tape": "^5.1"
   },
   "files": [],
   "author": "Morgan Conrad <flyingspaniel@gmail.com> (http://flyingspaniel.com/)",
